@@ -12,13 +12,13 @@ server.on("connection", (ws) => {
         counter++;
 
         // Broadcast the counter value to all connected clients
-        server.clients.forEach((client) => {
+        for (const client of server.clients) {
             broadcastMessage = `${message}`;
             if (client.readyState === WebSocket.OPEN) {
                 client.send(`counter: ${counter}`);
                 client.send(`${broadcastMessage}`);
             }
-        });
+        }
     });
 
     ws.send("Hello! Message from server!");

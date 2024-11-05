@@ -5,12 +5,16 @@
         "baseUrl": "src",
         "outDir": "dist",
         "sourceMap": true,
-        "noImplicitAny": true
+        "noImplicitAny": true,
+        "downlevelIteration": true
     },
     "include": [
         "src/**/*"
     ],
     "exclude": [
-        "node_modules"
+        "node_modules",
+        "dist",
+        "src/db",
+        "src/controllers"
     ]
 }
