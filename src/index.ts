@@ -1,24 +1,29 @@
-import WebSocket from "ws";
+import WebSocket, { Server, WebSocket as WS } from "ws";
 import { v4 as uuidv4 } from "uuid"; // Use uuid for unique client identifiers
 
-const server = new WebSocket.Server({ port: 3001 });
+const server: Server = new WebSocket.Server({ port: 3001 });
 console.log("WebSocket server started on ws://localhost:3001");
 
-let counter = 0;
-let messages = [];
+interface Message {
+    clientId: string;
+    message: string;
+}
 
-server.on("connection", (ws) => {
-    const clientId = uuidv4(); // Generate a unique ID for each client
+let counter: number = 0;
+let messages: Message[] = [];
+
+server.on("connection", (ws: WS) => {
+    const clientId: string = uuidv4(); // Generate a unique ID for each client
     console.log(`Client connected: ${clientId}`);
 
-    ws.on("message", (message) => {
+    ws.on("message", (message: string) => {
         console.log(`Received message from ${clientId}: ${message}`);
         counter++;
         messages.push({ clientId, message });
 
         // Broadcast the counter value and all messages to all connected clients
-        for (const client of server.clients) {
-            if (client.readyState === WebSocket.OPEN) {
+        server.clients.forEach(client => {
+            if (client.readyState === WS.OPEN) {
                 client.send(JSON.stringify({
                     type: "allMessages",
                     counter: counter,
@@ -33,7 +38,7 @@ server.on("connection", (ws) => {
                     messages: clientMessages
                 }));
             }
-        }
+        });
     });
 
     ws.send(JSON.stringify({
