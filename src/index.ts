@@ -1,25 +1,51 @@
 import WebSocket from "ws";
+import { v4 as uuidv4 } from "uuid"; // Use uuid for unique client identifiers
 
 const server = new WebSocket.Server({ port: 3001 });
 console.log("WebSocket server started on ws://localhost:3001");
 
 let counter = 0;
-let broadcastMessage = "Hello! Message from server!";
+let messages = [];
 
 server.on("connection", (ws) => {
-    ws.on("message", (message) => {
-        console.log(`Received message => ${message}`);
-        counter++;
+    const clientId = uuidv4(); // Generate a unique ID for each client
+    console.log(`Client connected: ${clientId}`);
 
-        // Broadcast the counter value to all connected clients
+    ws.on("message", (message) => {
+        console.log(`Received message from ${clientId}: ${message}`);
+        counter++;
+        messages.push({ clientId, message });
+
+        // Broadcast the counter value and all messages to all connected clients
         for (const client of server.clients) {
-            broadcastMessage = `${message}`;
             if (client.readyState === WebSocket.OPEN) {
-                client.send(`counter: ${counter}`);
-                client.send(`${broadcastMessage}`);
+                client.send(JSON.stringify({
+                    type: "allMessages",
+                    counter: counter,
+                    messages: messages.map(m => m.message)
+                }));
+
+                // Send only the messages from the specific client
+                const clientMessages = messages.filter(m => m.clientId === clientId).map(m => m.message);
+                client.send(JSON.stringify({
+                    type: "clientMessages",
+                    counter: counter,
+                    messages: clientMessages
+                }));
             }
         }
     });
 
-    ws.send("Hello! Message from server!");
+    ws.send(JSON.stringify({
+        type: "allMessages",
+        counter: counter,
+        messages: messages.map(m => m.message)
+    }));
+
+    // Send only the initial welcome message to the new client
+    ws.send(JSON.stringify({
+        type: "clientMessages",
+        counter: 0,
+        messages: ["Hello! Message from server!"]
+    }));
 });
