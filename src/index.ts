@@ -16,10 +16,11 @@ server.on("connection", (ws: WS) => {
     const clientId: string = `client_${clientIdCounter++}`; // Generate a unique ID for each client
     console.log(`Client connected: ${clientId}`);
 
-    ws.on("message", (message: string) => {
-        console.log(`Received message from ${clientId}: ${message}`);
+    ws.on("message", (message: Buffer) => {
+        const decodedMessage = message.toString();
+        console.log(`Received message from ${clientId}: ${decodedMessage}`);
         counter++;
-        messages.push({ clientId, message });
+        messages.push({ clientId, message: decodedMessage });
 
         // Broadcast the counter value and all messages to all connected clients
         server.clients.forEach(client => {
