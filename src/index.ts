@@ -25,14 +25,16 @@ server.on("connection", (ws: WS) => {
         // Broadcast the counter value and all messages to all connected clients
         server.clients.forEach(client => {
             if (client.readyState === WS.OPEN) {
+                // Send all messages to all clients
                 client.send(JSON.stringify({
                     type: "allMessages",
                     counter: counter,
                     messages: messages.map(m => m.message)
                 }));
 
-                // Send only the messages from the specific client
-                const clientMessages = messages.filter(m => m.clientId === clientId).map(m => m.message);
+                // Send only messages from the specific client to the respective client
+                const recipientId = (client as any).clientId; // Assuming clientId is saved per connection
+                const clientMessages = messages.filter(m => m.clientId === recipientId).map(m => m.message);
                 client.send(JSON.stringify({
                     type: "clientMessages",
                     counter: counter,
@@ -42,13 +44,17 @@ server.on("connection", (ws: WS) => {
         });
     });
 
+    // Save clientId for each connected WebSocket instance
+    (ws as any).clientId = clientId;
+
+    // Send initial message data when a new client connects
     ws.send(JSON.stringify({
         type: "allMessages",
         counter: counter,
         messages: messages.map(m => m.message)
     }));
 
-    // Send only the initial welcome message to the new client
+    // Send a welcome message to the new client
     ws.send(JSON.stringify({
         type: "clientMessages",
         counter: 0,
