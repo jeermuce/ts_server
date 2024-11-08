@@ -1,5 +1,4 @@
 import WebSocket, { Server, WebSocket as WS } from "ws";
-import { v4 as uuidv4 } from "uuid"; // Use uuid for unique client identifiers
 
 const server: Server = new WebSocket.Server({ port: 3001 });
 console.log("WebSocket server started on ws://localhost:3001");
@@ -11,9 +10,10 @@ interface Message {
 
 let counter: number = 0;
 let messages: Message[] = [];
+let clientIdCounter: number = 0; // Simple counter for unique client IDs
 
 server.on("connection", (ws: WS) => {
-    const clientId: string = uuidv4(); // Generate a unique ID for each client
+    const clientId: string = `client_${clientIdCounter++}`; // Generate a unique ID for each client
     console.log(`Client connected: ${clientId}`);
 
     ws.on("message", (message: string) => {
